@@ -1,140 +1,148 @@
+# Table Booking System
 
-### **1. What We're Building**
-A **Restaurant Table Booking System** with:
-- User authentication (signup/login)
-- Table management (20 tables with different capacities)
-- Booking management (create/view/cancel bookings)
-- Admin capabilities (user management, table management)
+A robust **Restaurant Table Booking System** built from scratch using **FastAPI** and **PostgreSQL**, designed to handle real-time table reservations, user management, and administrative capabilities.
 
-### **2. How It Works**
-**System Flow:**
-1. Users register/login via authentication endpoints
-2. Authenticated users can:
-   - Check table availability by time/date/party size
-   - Book available tables
-   - View/cancel their bookings
-3. Database maintains:
-   - User credentials (hashed passwords)
-   - Table inventory
-   - Booking records with time slots
+## Features
 
-### **3. User Actions**
-| Action | Endpoint | Method |
-|--------|----------|--------|
-| Register | `/auth/register` | POST |
-| Login | `/auth/token` | POST |
-| Check availability | `/bookings/availability` | GET |
-| Create booking | `/bookings` | POST |
-| View bookings | `/bookings` | GET |
-| Cancel booking | `/bookings/{id}` | DELETE |
+- **Authentication & Authorization**:
+  - User registration and login (Email & Password).
+  - OAuth2 with JWT for secure, token-based authentication.
+  - Role-based access control (Users/Admins).
 
-### **4. Key API Endpoints**
-```mermaid
-graph TD
-    A[Auth] --> B[/register POST]
-    A --> C[/login POST]
-    D[Bookings] --> E[/availability GET]
-    D --> F[/bookings POST]
-    D --> G[/bookings GET]
-    D --> H[/bookings/{id} DELETE]
+- **Core Functionality**:
+  - View available tables in real-time.
+  - Book a table by selecting the date and time.
+  - Cancel or manage existing bookings.
+
+- **Admin Capabilities**:
+  - Manage users (add/remove/modify accounts).
+  - Manage tables (update capacities, disable tables for maintenance).
+
+- **API Design**:
+  - RESTful API with Swagger documentation.
+  - Pydantic for data validation.
+  - Proper HTTP status codes for response clarity.
+
+- **Security**:
+  - Password hashing using `bcrypt`.
+  - Secure JWT token creation with token expiration.
+  - Protection against double booking with advisory locks.
+
+- **Database**:
+  - PostgreSQL as the database backend.
+  - Optimized queries and ACID-compliant transactions.
+  - Indexing for high-performance queries.
+
+- **DevOps**:
+  - Fully Dockerized application.
+  - PostgreSQL health checks.
+  - `.env` support for sensitive configuration.
+
+---
+
+## Tech Stack
+
+- **Backend**: FastAPI (Asynchronous)
+- **Database**: PostgreSQL
+- **ORM**: SQLAlchemy with async support
+- **Authentication**: OAuth2 + JWT
+- **DevOps**: Docker, Docker Compose
+- **Validation**: Pydantic
+
+---
+
+## Installation
+
+### Prerequisites
+- Python 3.9+
+- Docker & Docker Compose
+
+### Steps to Run Locally
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/karippery/table_booking_system.git
+   cd table_booking_system/app
+
+### Create and configure a .env file:
+   ```plaintext
+         # Database
+         DATABASE_URL=postgresql+asyncpg://postgres:your_secure_password@postgres:5432/booking_db
+         POSTGRES_USER=postgres
+         POSTGRES_PASSWORD=your_secure_password
+         POSTGRES_DB=booking_db
+
+         # Auth
+         SECRET_KEY=your_secret_key
+         ALGORITHM=HS256
+         ACCESS_TOKEN_EXPIRE_MINUTES=30
+         REFRESH_TOKEN_EXPIRE_DAYS=7
+         PASSWORD_MIN_LENGTH=8
+
+         # Pagination
+         PAGINATION_DEFAULT_PAGE_SIZE=25
+         PAGINATION_MAX_PAGE_SIZE=100
+
+         # Booking
+         DEFAULT_DURATION=4
+
+         #admin
+         INITIAL_ADMIN_EMAIL = "admin@admin.com"
+         INITIAL_ADMIN_PASSWORD = "Admin123456" 
+
+   ```
+
+1. Build and run the Docker containers:
+   ```bash
+   docker-compose up --build
+   ```
+
+2. Access the API documentation at:
+   - Swagger UI: `http://localhost:8000/docs`
+   - ReDoc: `http://localhost:8000/redoc`
+
+---
+
+## Usage
+
+### API Endpoints
+- **Authentication**:
+  - `POST /register`: Register a new user.
+  - `POST /token`: Login and get a JWT token.
+
+- **Table Booking**:
+  - `GET /tables`: View available tables.
+  - `POST /bookings`: Book a table.
+  - `DELETE /bookings/{id}`: Cancel a booking.
+
+- **Admin Operations**:
+  - `GET /admin/users`: View all users.
+  - `POST /admin/tables`: Add or update tables.
+
+---
+
+## Testing
+
+1. Run tests locally with:
+   ```bash
+   pytest
+   ```
+2. Use `pytest-asyncio` for testing async endpoints.
+
+---
+
+## Contributions
+
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+---
+
+## Author
+
+Developed by [karippery](https://github.com/karippery).
 ```
-
-### **5. Technology Stack**
-| Category | Technology |
-|----------|------------|
-| Framework | FastAPI (Python) |
-| Database | PostgreSQL |
-| ORM | SQLAlchemy (async) |
-| Authentication | OAuth2 + JWT |
-| Containerization | Docker |
-| Documentation | Swagger UI/ReDoc |
-| Testing | Pytest |
-
-### **6. Key Features Implemented**
-1. **Security**:
-   - Password hashing (bcrypt)
-   - JWT token authentication
-   - Role-based access control
-
-2. **Database**:
-   - Optimized queries with indexes
-   - Advisory locks for concurrent bookings
-   - ACID-compliant transactions
-
-3. **API Design**:
-   - RESTful endpoints
-   - Pydantic validation
-   - Proper HTTP status codes
-
-4. **DevOps**:
-   - Dockerized application
-   - PostgreSQL health checks
-   - Environment variables
-
-### **7. Sample Workflow**
-1. User registers → gets JWT token
-2. Searches for available tables (6pm, 4 people)
-3. Books a table → system checks availability
-4. Receives confirmation with booking ID
-5. Can view/cancel booking later
-
-### **8. Special Considerations**
-- Prevents double-booking with database locks
-- Validates booking times (no past dates)
-- Rate limiting on booking endpoints
-- Email notifications (can be added)
-
-### **9. How to Run**
-```bash
-# With Docker (recommended)
-docker compose up --build
-
-# Manually
-uvicorn app.main:app --reload
-```
-Access docs at `http://localhost:8000/docs`
-
-This system provides a complete, production-ready table reservation system following modern API best practices with proper security and scalability considerations.
-
-## Project structure
-
-        table_booking_system/
-        ├── .env                    # Environment variables
-        ├── docker-compose.yml      # Docker compose configuration
-        ├── Dockerfile              # Docker image setup
-        ├── requirements.txt        # Python dependencies
-        │
-        ├── app/                    # Main application code
-        │   ├── __init__.py         # Makes app a Python package
-        │   ├── main.py             # FastAPI app entry point
-        │   ├── database.py         # Database connection setup
-        │   ├── models.py           # SQLAlchemy models (User, Table, Booking)
-        │   │
-        │   ├── schemas/            # Pydantic models
-        │   │   ├── __init__.py
-        │   │   ├── user.py         # User schemas (UserCreate, UserResponse)
-        │   │   └── booking.py      # Booking schemas (BookingCreate, BookingResponse)
-        │   │
-        │   ├── crud/               # Database operations
-        │   │   ├── __init__.py
-        │   │   ├── user.py         # User CRUD operations
-        │   │   └── booking.py      # Booking CRUD operations
-        │   │
-        │   ├── utils/              # Utility functions
-        │   │   ├── __init__.py
-        │   │   ├── security.py     # Password hashing, JWT
-        │   │   └── token.py        # Token handling
-        │   │
-        │   └── api/
-        │       ├── __init__.py
-        │       └── endpoints/      # API route handlers
-        │           ├── __init__.py
-        │           ├── auth.py     # Authentication routes
-        │           └── booking.py  # Booking routes
-        │
-        ├── venv/                   # Virtual environment (ignored in Git)
-        │
-        └── tests/                  # Test files (optional)
-            ├── __init__.py
-            ├── test_auth.py
-            └── test_booking.py
