@@ -1,0 +1,55 @@
+# Python related
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# IDE and editor-related files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Docker related
+*.swp
+docker-compose.override.yml
+
+# Database files
+*.db
+*.sqlite3
+pgdata/
+*.sql
+dump.sql
+*.pgpass
+
+# Coverage files
+.coverage
+*.cover
+
+# Migrations
+migrations/
+
+# FastAPI-specific
+generated_docs/
+static/
+templates/
+
+# Unit test cache
+.pytest_cache/
+.tox/
