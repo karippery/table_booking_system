@@ -1,8 +1,8 @@
-from enum import Enum as PyEnum
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
+from enum import Enum as PyEnum
 
 
 class UserRole(str, PyEnum):
@@ -30,4 +30,3 @@ class User(Base):
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"
-    

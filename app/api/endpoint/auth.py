@@ -17,12 +17,13 @@ from app.schemas.user import (
     RefreshTokenRequest,
     UserUpdate
 )
+from app.utils.role import is_admin
 from app.utils.security import (
     verify_password,
     create_tokens,
     validate_password_strength
 )
-from app.utils.token import decode_token, get_current_admin, get_current_user
+from app.utils.token import decode_token, get_current_user
 
 router = APIRouter(tags=["auth"])
 
@@ -177,7 +178,7 @@ async def read_user_me(
 @router.put(
     "/{user_id}",
     response_model=UserResponse,
-    dependencies=[Depends(get_current_admin)],
+    dependencies=[Depends(is_admin)],
     summary="Update a user (Admin only)"
 )
 async def update_user_admin(
@@ -200,7 +201,7 @@ async def update_user_admin(
 @router.delete(
     "/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(get_current_admin)],
+    dependencies=[Depends(is_admin)],
     summary="Delete a user (Admin only)"
 )
 async def delete_user_admin(

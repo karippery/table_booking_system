@@ -9,7 +9,6 @@ from app.crud.user import get_user_by_email
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.models.user import UserRole
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
@@ -83,7 +82,7 @@ async def get_current_user(
                 detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         user = await get_user_by_email(db, email=email)
         if user is None:
             raise HTTPException(
@@ -105,15 +104,3 @@ async def get_current_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
-
-
-async def get_current_admin(
-    current_user: User = Depends(get_current_user)
-) -> User:
-    """Verify current user is admin."""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
-        )
-    return current_user
