@@ -21,6 +21,7 @@ from app.schemas.booking import (
 )
 from app.database import get_db
 from app.schemas.table import TableResponse
+from app.utils.role import is_admin
 from app.utils.token import get_current_user
 
 
@@ -36,7 +37,7 @@ async def read_bookings(
     status: Optional[str] = None,
     booking_date: Optional[date] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(is_admin)
 ):
     filters = BookingFilter(
         user_id=user_id,  # No restriction on whose bookings can be queried
@@ -57,13 +58,25 @@ async def check_availability(
     query: AvailabilityQuery = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
-    """Check available tables for a given time range"""
-    return await get_available_tables(
-        db,
-        query.start_time,
-        query.end_time,
-        query.guest_count
-    )
+    """
+    Check table availability for default duration
+    - start_time: Required datetime in ISO format
+    - guest_count: Optional number of guests
+    """
+    try:
+        # Get available tables using the query's calculated end_time
+        available_tables = await get_available_tables(
+            db,
+            start_time=query.start_time,
+            end_time=query.end_time,
+            guest_count=query.guest_count
+        )
+        return available_tables
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error checking availability: {str(e)}"
+        )
 
 
 # for a given time range and guest count
@@ -80,7 +93,6 @@ async def book_table(
             current_user.id,
             booking_data.table_id,
             booking_data.start_time,
-            booking_data.end_time,
             booking_data.guest_count,
             booking_data.special_requests
         )

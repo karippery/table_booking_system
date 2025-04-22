@@ -19,7 +19,11 @@ app.add_middleware(
 )
 
 app = FastAPI(
-    title="Your API",
+    title="Table Booking API",
+    description=(
+        "API for managing table bookings in a restaurant, library, or "
+        "similar venue."
+    ),
     version="1.0.0",
     swagger_ui_parameters={
         "oauth2RedirectUrl": "/docs/oauth2-redirect",

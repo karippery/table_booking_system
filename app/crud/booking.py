@@ -1,16 +1,36 @@
 
 import os
 from typing import List, Optional
-from app.api.deps.pagination import PaginationParams
+from zoneinfo import ZoneInfo
 from app.models.booking import Booking
 from app.models.table import Table
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 from sqlalchemy import between, func, select, and_, exists, text
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException
 
 
 from app.schemas.booking import BookingFilter
+
+
+async def _apply_booking_filters(
+    query,
+    filters: BookingFilter
+):
+    """Apply filters to booking query"""
+    if filters.user_id is not None:
+        query = query.where(Booking.user_id == filters.user_id)
+    if filters.status is not None:
+        query = query.where(Booking.status == filters.status)
+    if filters.booking_date is not None:
+        query = query.where(
+            between(
+                Booking.start_time,
+                datetime.combine(filters.booking_date, datetime.min.time()),
+                datetime.combine(filters.booking_date, datetime.max.time())
+            )
+        )
+    return query
 
 
 # Retrieves a list of available tables for a specified time range and
@@ -20,12 +40,8 @@ async def get_available_tables(
     start_time: datetime,
     end_time: datetime,
     guest_count: Optional[int] = None,
-    pagination: dict = Depends(PaginationParams)
 ) -> List[Table]:
     try:
-        # Simplified query using EXISTS
-        skip = (pagination["page"] - 1) * pagination["size"]
-        limit = pagination["size"]
         query = select(Table).where(
             Table.is_active
         ).where(
@@ -37,8 +53,6 @@ async def get_available_tables(
                     Booking.end_time > start_time
                 )
             )
-            .offset(skip)
-            .limit(limit)
         )
         if guest_count:
             query = query.where(Table.capacity >= guest_count)
@@ -62,8 +76,15 @@ async def create_booking(
     guest_count: int,
     special_requests: str = None
 ):
-    end_time = start_time + timedelta(hours=os.getevn("DEFAULT_DURATION"))
+    # Ensure timezone awareness
+    if start_time.tzinfo is None:
+        start_time = start_time.replace(tzinfo=ZoneInfo("UTC"))
 
+    end_time = start_time + timedelta(hours=int(os.getenv("DEFAULT_DURATION")))
+
+    # Ensure end_time is timezone-aware
+    if end_time.tzinfo is None:
+        end_time = end_time.replace(tzinfo=ZoneInfo("UTC"))
     await db.execute(
         text("SELECT pg_advisory_xact_lock(:lock_id)"),
         {"lock_id": table_id}
@@ -147,25 +168,7 @@ async def get_bookings(
     try:
         query = select(Booking)
         if filters:
-            conditions = []
-            if filters.user_id is not None:
-                conditions.append(Booking.user_id == filters.user_id)
-            if filters.status is not None:
-                conditions.append(Booking.status == filters.status)
-            if filters.booking_date is not None:
-                conditions.append(
-                    between(
-                        Booking.start_time,
-                        datetime.combine(
-                            filters.booking_date, datetime.min.time()
-                            ),
-                        datetime.combine(
-                            filters.booking_date, datetime.max.time()
-                        )
-                    )
-                )
-            if conditions:
-                query = query.where(and_(*conditions))
+            query = await _apply_booking_filters(query, filters)
         query = query.offset(skip).limit(limit)
         result = await db.execute(query)
         return result.scalars().all()
@@ -183,25 +186,7 @@ async def get_booking_count(
     try:
         query = select(func.count(Booking.id))
         if filters:
-            conditions = []
-            if filters.user_id:
-                conditions.append(Booking.user_id == filters.user_id)
-            if filters.status:
-                conditions.append(Booking.status == filters.status)
-            if filters.booking_date:
-                conditions.append(
-                    between(
-                        Booking.start_time,
-                        datetime.combine(
-                            filters.booking_date, datetime.min.time()
-                            ),
-                        datetime.combine(
-                            filters.booking_date, datetime.max.time()
-                            )
-                    )
-                )
-            if conditions:
-                query = query.where(and_(*conditions))
+            query = await _apply_booking_filters(query, filters)
         result = await db.execute(query)
         return result.scalar()
     except Exception as e:
