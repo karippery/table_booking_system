@@ -53,8 +53,8 @@ async def register_user(
       uppercase, lowercase, and digits
     """
     try:
-        # Check if email already registered
         validate_email_format(user.email)
+        # Check if email already registered
         existing_user = await get_user_by_email(db, email=user.email)
         if existing_user:
             raise HTTPException(
