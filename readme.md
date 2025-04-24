@@ -1,6 +1,6 @@
 # Table Booking System
 
-A robust **Restaurant Table Booking System** built from scratch using **FastAPI** and **PostgreSQL**, designed to handle real-time table reservations, user management, and administrative capabilities.
+A robust **Table Booking System** built from scratch using **FastAPI** and **PostgreSQL**, designed to handle real-time table reservations, user management, and administrative capabilities.
 
 ## Features
 
