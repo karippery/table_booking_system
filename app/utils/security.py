@@ -13,6 +13,21 @@ pwd_context = CryptContext(
     bcrypt__rounds=12  # Increased for better security
 )
 
+EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$")
+
+
+def validate_email_format(email: str):
+    """
+    Validates the format of an email address.
+    Raises:
+        HTTPException: If email format is invalid.
+    """
+    if not EMAIL_REGEX.match(email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format"
+        )
+
 
 def validate_password_strength(password: str) -> None:
     """Enforce password complexity requirements."""
