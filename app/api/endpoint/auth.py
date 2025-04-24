@@ -168,10 +168,12 @@ async def refresh_token(
     summary="Get current user details"
 )
 async def read_user_me(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get current authenticated user's details."""
-    return current_user
+    refreshed_user = await get_user(db, current_user.id)
+    return refreshed_user
 
 
 # get user by id (admin only)
