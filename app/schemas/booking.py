@@ -25,8 +25,8 @@ class BookingBase(BaseModel):
     end_time: datetime = Field(..., description="End time of the booking")
     guest_count: int = Field(..., gt=0, description="Number of guests")
     special_requests: Optional[str] = Field(
-        None, 
-        max_length=500, 
+        None,
+        max_length=500,
         description="Any special requests for the booking"
     )
 
