@@ -1,6 +1,10 @@
 # Table Booking System
 
+<<<<<<< HEAD
 A lightweight and robust Table Booking System built with FastAPI and PostgreSQL, designed for restaurants, libraries, cafes, offices, and canteens.
+=======
+A robust **Table Booking System** built from scratch using **FastAPI** and **PostgreSQL**, designed to handle real-time table reservations, user management, and administrative capabilities.
+>>>>>>> e6f7335afad5a34b89dfa2d902a21efb2c4fcb86
 
 ## Features
 
