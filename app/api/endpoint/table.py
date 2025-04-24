@@ -34,7 +34,13 @@ async def create_new_table(
     table: TableCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    return await create_table(db, table)
+    try:
+        return await create_table(db, table)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error creating table: {str(e)}"
+        )
 
 
 @router.get("/",
@@ -61,7 +67,13 @@ async def read_available_tables(
     Get all available tables that match the query criteria.
     Accessible to all authenticated users (both guests and admins).
     """
-    return await get_available_tables(db, query, skip=skip, limit=limit)
+    try:
+        return await get_available_tables(db, query, skip=skip, limit=limit)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid availability request: {str(e)}"
+        )
 
 
 @router.get("/{table_id}",

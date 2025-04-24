@@ -81,7 +81,13 @@ Content-Type: application/json
 }
 ```
 
+## Frontend Technology 
 
+Stack: React + TypeScript + Vite + Tailwind CSS + TanStack Query + Zustand + React Hook Form + Zod + Axios + React Router + Lucide + React Date Picker
+✅ Fast: Vite + Tailwind optimize performance.
+✅ Scalable: TanStack Query + Zustand handle growth.
+✅ Type-Safe: TypeScript + Zod reduce runtime errors.
+✅ Maintainable: Clean structure + modern tooling.
 
 ## License
 

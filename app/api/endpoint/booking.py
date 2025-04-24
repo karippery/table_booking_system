@@ -1,5 +1,6 @@
 # api/endpoints/booking.py
 from datetime import date, timedelta
+import os
 from sqlalchemy import select, and_
 from app.crud.booking import (
     create_booking,
@@ -151,7 +152,7 @@ async def cancel_and_free_booking_endpoint(
 @router.post("/bookings/{booking_id}/extend", response_model=dict)
 async def extend_booking(
     booking_id: int,
-    extension_minutes: int = 60,
+    extension_minutes: int = os.getenv("EXTENSION_MINUTES", 30),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
