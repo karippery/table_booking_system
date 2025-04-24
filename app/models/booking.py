@@ -5,7 +5,13 @@ from sqlalchemy import (TIMESTAMP, Column, Enum,
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
-from app.schemas.booking import BookingStatus
+from enum import Enum as PyEnum
+
+
+class BookingStatus(str, PyEnum):
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
 
 
 class Booking(Base):

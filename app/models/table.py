@@ -20,7 +20,7 @@ class Table(Base):
     status = Column(Enum(TableStatus), default=TableStatus.AVAILABLE)
     is_active = Column(Boolean, default=True)
     bookings = relationship("Booking", back_populates="table")
-    
+
     __table_args__ = (
         Index('idx_table_capacity_status', 'capacity', 'status'),
         Index('idx_table_location_status', 'location', 'status'),

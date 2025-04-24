@@ -114,16 +114,16 @@ async def cancel_and_free_booking_endpoint(
     booking = await db.get(Booking, booking_id)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
-    
+
     if booking.user_id != current_user.id and not current_user.is_admin:
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Not authorized to cancel this booking"
         )
 
     if booking.status != "confirmed":
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Booking is already cancelled or inactive"
         )
 
@@ -177,7 +177,7 @@ async def extend_booking(
     )
     if conflicting_booking.scalars().first():
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Table not available for extension"
         )
 

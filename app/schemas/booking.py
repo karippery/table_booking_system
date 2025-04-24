@@ -5,11 +5,7 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from enum import Enum
 
-
-class BookingStatus(str, Enum):
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
-    COMPLETED = "completed"
+from app.models.booking import BookingStatus
 
 
 class SeatPreference(str, Enum):

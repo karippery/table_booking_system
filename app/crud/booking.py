@@ -3,7 +3,7 @@ import os
 from typing import List, Optional
 from zoneinfo import ZoneInfo
 from app.models.booking import Booking
-from app.models.table import Table
+from app.models.table import Table, TableStatus
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 from sqlalchemy import between, func, select, and_, exists, text
@@ -43,7 +43,8 @@ async def get_available_tables(
 ) -> List[Table]:
     try:
         query = select(Table).where(
-            Table.is_active
+            Table.is_active,
+            Table.status == TableStatus.AVAILABLE,
         ).where(
             ~exists().where(
                 and_(
@@ -177,7 +178,7 @@ async def get_bookings(
             status_code=500,
             detail=f"Database error: {str(e)}"
         )
-    
+
 
 async def get_booking_count(
     db: AsyncSession,
