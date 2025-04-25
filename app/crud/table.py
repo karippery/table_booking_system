@@ -1,10 +1,10 @@
+from typing import Optional
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import and_
 from fastapi import HTTPException
 
 from app.models.table import Table, TableStatus
-from app.schemas.table import TableAvailabilityQuery
 
 
 async def create_table(db: AsyncSession, table_data):
@@ -20,8 +20,32 @@ async def get_table(db: AsyncSession, table_id: int):
     return result.scalars().first()
 
 
-async def get_tables(db: AsyncSession, skip: int = 0, limit: int = 100):
-    result = await db.execute(select(Table).offset(skip).limit(limit))
+async def get_tables(
+    db: AsyncSession,
+    status: Optional[TableStatus] = None,
+    location: Optional[str] = None,
+    capacity: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100
+):
+    conditions = []
+
+    if status:
+        conditions.append(Table.status == status)
+    if location:
+        conditions.append(Table.location == location)
+    if capacity:
+        conditions.append(Table.capacity >= capacity)
+
+    stmt = (
+        select(Table)
+        .where(and_(*conditions) if conditions else True)
+        .order_by(Table.capacity.asc())
+        .offset(skip)
+        .limit(limit)
+    )
+
+    result = await db.execute(stmt)
     return result.scalars().all()
 
 
@@ -42,33 +66,6 @@ async def delete_table(db: AsyncSession, table_id: int):
         await db.delete(db_table)
         await db.commit()
     return db_table
-
-
-async def get_available_tables(
-    db: AsyncSession,
-    query: TableAvailabilityQuery,
-    skip: int = 0,
-    limit: int = 100
-):
-    conditions = [
-        Table.status == TableStatus.AVAILABLE,
-        Table.is_active,
-        Table.capacity >= query.capacity
-    ]
-
-    if query.location:
-        conditions.append(Table.location == query.location)
-
-    stmt = (
-        select(Table)
-        .where(and_(*conditions))
-        .order_by(Table.capacity.asc())
-        .offset(skip)
-        .limit(limit)
-    )
-
-    result = await db.execute(stmt)
-    return result.scalars().all()
 
 
 async def set_table_status(

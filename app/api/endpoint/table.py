@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Optional
 
 from app.crud.table import (
     create_table,
@@ -8,7 +8,6 @@ from app.crud.table import (
     get_tables,
     update_table,
     delete_table,
-    get_available_tables,
     set_table_status
 )
 from app.database import get_db
@@ -16,10 +15,9 @@ from app.schemas.table import (
     TableCreate,
     TableResponse,
     TableUpdate,
-    TableAvailabilityQuery,
     TableStatus
 )
-from app.utils.role import is_admin, is_guest
+from app.utils.role import is_admin
 
 router = APIRouter(tags=["tables"])
 
@@ -34,34 +32,34 @@ async def create_new_table(
     table: TableCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    return await create_table(db, table)
+    try:
+        return await create_table(db, table)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error creating table: {str(e)}"
+        )
 
 
 @router.get("/",
             response_model=List[TableResponse],
             dependencies=[Depends(is_admin)])
 async def read_tables(
+    status: Optional[TableStatus] = Query(None),
+    location: Optional[str] = Query(None),
+    capacity: Optional[int] = Query(None, ge=1),
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_tables(db, skip=skip, limit=limit)
-
-
-@router.get("/available",
-            response_model=List[TableResponse],
-            dependencies=[Depends(is_guest)])
-async def read_available_tables(
-    query: TableAvailabilityQuery,
-    skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Get all available tables that match the query criteria.
-    Accessible to all authenticated users (both guests and admins).
-    """
-    return await get_available_tables(db, query, skip=skip, limit=limit)
+    return await get_tables(
+        db=db,
+        status=status,
+        location=location,
+        capacity=capacity,
+        skip=skip,
+        limit=limit
+    )
 
 
 @router.get("/{table_id}",

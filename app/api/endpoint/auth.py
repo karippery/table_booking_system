@@ -19,6 +19,7 @@ from app.schemas.user import (
 )
 from app.utils.role import is_admin
 from app.utils.security import (
+    validate_email_format,
     verify_password,
     create_tokens,
     validate_password_strength
@@ -36,6 +37,7 @@ router = APIRouter(tags=["auth"])
     summary="Register a new user",
     responses={
         400: {"description": "Email already registered or invalid password"},
+        500: {"description": "Internal server error"},
         201: {"description": "User created successfully"}
     }
 )
@@ -48,22 +50,31 @@ async def register_user(
 
     - **email**: must be unique and valid email format
     - **password**: must be at least 8 characters with
-        uppercase, lowercase and digits
+      uppercase, lowercase, and digits
     """
-    # Check password strength
-    validate_password_strength(user.password)
+    try:
+        validate_email_format(user.email)
+        # Check if email already registered
+        existing_user = await get_user_by_email(db, email=user.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
 
-    # Check if user exists
-    existing_user = await get_user_by_email(db, email=user.email)
-    if existing_user:
+        validate_password_strength(user.password)
+
+        new_user = await create_user(db=db, user=user)
+        return new_user
+
+    except HTTPException as http_ex:
+        raise http_ex
+
+    except Exception:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred. Please try again later."
         )
-
-    # Create new user
-    new_user = await create_user(db=db, user=user)
-    return new_user
 
 
 # Login user
@@ -72,8 +83,15 @@ async def register_user(
     response_model=TokenResponse,
     summary="Login with email and password",
     responses={
-        401: {"description": "Incorrect credentials"},
-        200: {"description": "Successfully logged in"}
+        401: {
+            "description": "Authentication failed: Incorrect email or password"
+        },
+        403: {
+            "description": "Account is inactive. Please contact support."
+        },
+        200: {
+            "description": "Successfully logged in"
+        }
     }
 )
 async def login_for_access_token(
@@ -82,26 +100,38 @@ async def login_for_access_token(
 ):
     """
     Authenticate user and return access/refresh tokens.
-    - **username**: email address
-    - **password**: user's password
+
+    - **username**: User's email address
+    - **password**: User's password
     """
     user = await get_user_by_email(db, email=form_data.username)
-    if not user or not verify_password(
-        form_data.password, user.hashed_password
-    ):
+    validate_email_format(form_data.username)
+
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Authentication failed: No account found with this email.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: Incorrect password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
+            detail=(
+                "Account is inactive. Please contact support or "
+                "try again later."
+            ),
         )
 
     access_token, refresh_token = create_tokens(user.email)
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -168,10 +198,12 @@ async def refresh_token(
     summary="Get current user details"
 )
 async def read_user_me(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get current authenticated user's details."""
-    return current_user
+    refreshed_user = await get_user(db, current_user.id)
+    return refreshed_user
 
 
 # get user by id (admin only)

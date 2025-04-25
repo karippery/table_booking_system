@@ -39,7 +39,3 @@ class TableResponse(TableBase):
         from_attributes = True
         use_enum_values = True
 
-
-class TableAvailabilityQuery(BaseModel):
-    capacity: int = Field(..., gt=0)
-    location: Optional[str] = None
