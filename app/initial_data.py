@@ -15,11 +15,11 @@ async def create_admin_user():
                 select(User).where(User.role == UserRole.ADMIN)
             )
             admin_exists = result.scalars().first()
-            
+
             if not admin_exists:
                 admin_email = os.getenv("INITIAL_ADMIN_EMAIL")
                 admin_password = os.getenv("INITIAL_ADMIN_PASSWORD")
-                
+
                 admin_user = User(
                     email=admin_email,
                     hashed_password=get_password_hash(admin_password),
