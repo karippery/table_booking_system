@@ -6,7 +6,7 @@ class PaginationSettings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
 
-    class Config:
+    class ConfigDict:
         env_prefix = "PAGINATION_"  # Reads PAGINATION_* from .env
 
 
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
         description="Default booking duration in hours"
         )
 
-    class Config:
+    class ConfigDict:
         env_file = ".env"
         case_sensitive = True
         extra = "ignore"

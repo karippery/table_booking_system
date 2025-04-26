@@ -7,11 +7,18 @@ from app.models.user import UserRole
 
 
 class UserBase(BaseModel):
-    email: EmailStr = Field(..., example="user@example.com")
+    email: EmailStr = Field(
+        ...,
+        json_schema_extra={"example": "user@example.com"}
+    )
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, example="Str0ngP@ssword")
+    password: str = Field(
+        ...,
+        min_length=8,
+        json_schema_extra={"example": "Str0ngP@ssword"}
+    )
 
     @field_validator('password')
     def validate_password(cls, v):
@@ -73,7 +80,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 

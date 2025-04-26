@@ -1,7 +1,7 @@
 from datetime import datetime, date, timedelta
 import os
 from zoneinfo import ZoneInfo
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from enum import Enum
 
@@ -16,17 +16,34 @@ class SeatPreference(str, Enum):
 
 
 class BookingBase(BaseModel):
-    table_id: int = Field(..., description="ID of the table to book")
-    start_time: datetime = Field(..., description="Start time of the booking")
-    end_time: datetime = Field(..., description="End time of the booking")
-    guest_count: int = Field(..., gt=0, description="Number of guests")
+    table_id: int = Field(
+        ...,
+        json_schema_extra={
+            "description": "ID of the table to book"
+            })
+    start_time: datetime = Field(
+        ...,
+        json_schema_extra={
+            "description": "Start time of the booking"
+            })
+    end_time: datetime = Field(
+        ...,
+        json_schema_extra={
+            "description": "End time of the booking"
+            })
+    guest_count: int = Field(
+        ..., gt=0,
+        json_schema_extra={
+            "description": "Number of guests"
+            })
     special_requests: Optional[str] = Field(
         None,
         max_length=500,
-        description="Any special requests for the booking"
-    )
+        json_schema_extra={
+            "description": "Any special requests for the booking"
+        })
 
-    @validator('end_time')
+    @field_validator('end_time')
     def validate_end_time(cls, v, values):
         if 'start_time' in values and v <= values['start_time']:
             raise ValueError("End time must be after start time")
@@ -34,12 +51,27 @@ class BookingBase(BaseModel):
 
 
 class BookingCreate(BaseModel):
-    table_id: int
-    start_time: datetime
-    guest_count: int = Field(..., gt=0)
-    special_requests: Optional[str] = None
+    table_id: int = Field(
+        json_schema_extra={
+            "description": "ID of the table being booked"
+            })
+    start_time: datetime = Field(
+        json_schema_extra={
+            "description": "Start time of the booking"
+            })
+    guest_count: int = Field(
+        ..., gt=0,
+        json_schema_extra={
+            "description": "Number of guests (must be positive)"
+            })
+    special_requests: Optional[str] = Field(
+        default=None,
+        json_schema_extra={
+            "description": "Any special requests for the booking"
+            }
+    )
 
-    @validator('start_time')
+    @field_validator('start_time')
     def ensure_timezone(cls, v):
         """Ensure datetime is timezone-aware"""
         if v.tzinfo is None:
@@ -49,24 +81,27 @@ class BookingCreate(BaseModel):
 
 class BookingUpdate(BaseModel):
     table_id: Optional[int] = Field(
-        None,
-        description="ID of the table to book"
+        default=None,
+        json_schema_extra={"description": "ID of the table to book"}
     )
     start_time: Optional[datetime] = Field(
-        None,
-        description="New start time"
-        )
+        default=None,
+        json_schema_extra={"description": "New start time"}
+    )
     end_time: Optional[datetime] = Field(
-        None,
-        description="New end time"
-        )
+        default=None,
+        json_schema_extra={"description": "New end time"}
+    )
     guest_count: Optional[int] = Field(
-        None,
+        default=None,
         gt=0,
-        description="New guest count"
-        )
-    special_requests: Optional[str] = Field(None, max_length=500)
-    status: Optional[BookingStatus] = Field(None)
+        json_schema_extra={"description": "New guest count"}
+    )
+    special_requests: Optional[str] = Field(
+        default=None,
+        max_length=500
+    )
+    status: Optional["BookingStatus"] = Field(default=None)
 
 
 class BookingResponse(BookingBase):
@@ -76,9 +111,9 @@ class BookingResponse(BookingBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
-        json_encoders = {
+        json_serializers = {
             datetime: lambda v: v.isoformat()
         }
 
@@ -88,8 +123,18 @@ class BookingListResponse(BaseModel):
 
 
 class AvailabilityQuery(BaseModel):
-    start_time: datetime = Field(..., example="2025-04-14T18:00:00")
-    guest_count: Optional[int] = Field(None, gt=0, example=4)
+    start_time: datetime = Field(
+        ...,
+        json_schema_extra={
+            "example": "2025-04-14T18:00:00"
+            })
+    guest_count: Optional[int] = Field(
+        default=None,
+        gt=0,
+        json_schema_extra={
+            "example": 4
+        }
+    )
 
     @property
     def end_time(self):
@@ -108,6 +153,6 @@ class BookingFilter(BaseModel):
     booking_date: Optional[date] = None
     min_capacity: Optional[int] = None
 
-    class Config:
+    class ConfigDict:
         extra = "forbid"
         use_enum_values = True
