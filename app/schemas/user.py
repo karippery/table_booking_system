@@ -42,7 +42,7 @@ class UserCreate(UserBase):
 
 
 class UserCreateAdmin(UserCreate):
-    role: UserRole = UserRole.GUEST
+    role: UserRole = UserRole.ADMIN
 
 
 class UserUpdate(BaseModel):

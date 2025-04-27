@@ -13,6 +13,7 @@ from app.models.user import User
 from app.schemas.user import (
     TokenResponse,
     UserCreate,
+    UserCreateAdmin,
     UserResponse,
     RefreshTokenRequest,
     UserUpdate
@@ -75,6 +76,21 @@ async def register_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred. Please try again later."
         )
+
+
+@router.post("/admin/register", response_model=UserResponse, status_code=201)
+async def register_admin_user(
+    user: UserCreateAdmin,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(is_admin)
+):
+    validate_email_format(user.email)
+    existing_user = await get_user_by_email(db, email=user.email)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    validate_password_strength(user.password)
+    new_user = await create_user(db, user)
+    return new_user
 
 
 # Login user

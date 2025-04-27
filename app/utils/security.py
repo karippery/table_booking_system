@@ -92,6 +92,3 @@ def _create_token(data: dict, expires_delta: timedelta) -> str:
         os.getenv("SECRET_KEY", settings.SECRET_KEY),
         algorithm=settings.ALGORITHM
     )
-
-
-

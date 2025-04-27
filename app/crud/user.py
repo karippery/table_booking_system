@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from app.api.deps.pagination import PaginationParams
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.utils.security import get_password_hash
 
@@ -27,7 +27,7 @@ async def create_user(db: AsyncSession, user: UserCreate) -> User:
         email=user.email,
         hashed_password=hashed_password,
         is_active=True,
-        role=UserRole.GUEST,
+        role=user.role,
 
     )
     db.add(db_user)
